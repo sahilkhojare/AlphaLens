@@ -2,6 +2,7 @@ import numpy as np
 import pandas as pd
 
 CAPITAL = 100_000.0
+STEP = pd.Timedelta("5min")
 
 def round_trip_cost(fee_bps_round_trip=6.0, slippage_bps_per_side=2.0):
     return (fee_bps_round_trip + 2 * slippage_bps_per_side) / 1e4
@@ -12,11 +13,25 @@ def signals_from_proba(p, base_rate, delta):
     s[p < base_rate - delta] = -1
     return s
 
-def run_backtest(df, signal, fee_bps_round_trip=6.0, slippage_bps_per_side=2.0, capital=CAPITAL):
-    """df needs columns 'day' and 'fwd_ret' (open->close return of the bar after the signal)."""
+def apply_hold(index, signal, hold):
+    """One position at a time: skip signals that arrive while a trade is still open."""
+    sig = np.asarray(signal).copy()
+    free_at = None
+    for i, ts in enumerate(index):
+        if sig[i] == 0:
+            continue
+        if free_at is not None and ts < free_at:
+            sig[i] = 0
+            continue
+        free_at = ts + hold * STEP
+    return sig
+
+def run_backtest(df, signal, fee_bps_round_trip=6.0, slippage_bps_per_side=2.0,
+                 capital=CAPITAL, hold=1):
+    """df needs columns 'day' and 'fwd_ret' (return from next open to close of bar t+hold)."""
     assert df.index.is_monotonic_increasing, "sort by time first"
     out = df[["day", "fwd_ret"]].copy()
-    out["signal"] = np.asarray(signal)
+    out["signal"] = apply_hold(out.index, signal, hold)
     traded = out["signal"] != 0
     out["gross_ret"] = out["signal"] * out["fwd_ret"]
     out["cost"] = np.where(traded, round_trip_cost(fee_bps_round_trip, slippage_bps_per_side), 0.0)
@@ -44,6 +59,7 @@ def summarize(bt, capital=CAPITAL):
         "gross_hit_rate_pct": (bt.loc[tr, "gross_ret"] > 0).mean() * 100 if n else np.nan,
         "avg_gross_bps_per_trade": bt.loc[tr, "gross_ret"].mean() * 1e4 if n else np.nan,
     }
+
 def buy_and_hold_summary(df):
     """Hold from the first to the last bar, overnight included, no costs."""
     c = df["close"]
@@ -54,9 +70,5 @@ def buy_and_hold_summary(df):
         "max_drawdown_pct": (eq / eq.cummax() - 1).min() * 100,
         "sharpe": _sharpe(daily),
         "trades": 1, "hit_rate_pct": np.nan, "avg_net_bps_per_trade": np.nan,
-    }
-    {"gross_hit_rate_pct": (bt.loc[tr, "gross_ret"] > 0).mean() * 100 if n else np.nan,
-    "avg_gross_bps_per_trade": bt.loc[tr, "gross_ret"].mean() * 1e4 if n else np.nan,
-    
-    
+        "gross_hit_rate_pct": np.nan, "avg_gross_bps_per_trade": np.nan,
     }

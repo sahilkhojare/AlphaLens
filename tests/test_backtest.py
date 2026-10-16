@@ -1,5 +1,5 @@
 import numpy as np, pandas as pd
-from src.backtest import run_backtest, summarize
+from src.backtest import run_backtest, summarize ,apply_hold
 
 def frame(rets):
     idx = pd.date_range("2026-01-05 09:20", periods=len(rets), freq="5min", tz="Asia/Kolkata")
@@ -21,3 +21,8 @@ def test_drawdown_and_total_return():
     bt = run_backtest(frame([0.10, -0.50]), [1, 1], fee_bps_round_trip=0, slippage_bps_per_side=0)
     s = summarize(bt)
     assert np.isclose(s["max_drawdown_pct"], -50.0) and np.isclose(s["total_return_pct"], -45.0)
+
+def test_overlapping_signals_are_skipped():
+    idx = pd.date_range("2026-01-05 09:20", periods=6, freq="5min", tz="Asia/Kolkata")
+    sig = apply_hold(idx, [1, 1, 1, 1, 1, 1], hold=3)
+    assert list(sig) == [1, 0, 0, 1, 0, 0]

@@ -9,7 +9,7 @@ STEP = pd.Timedelta("5min")
 def feature_columns(d):
     return FEATURES_BASE + (["rel_vol"] if "rel_vol" in d.columns else [])
 
-def build_dataset(df):
+def build_dataset(df, horizon=1):
     d = df.copy()
     d["day"] = d.index.date
     g = d.groupby("day", sort=False)
@@ -31,14 +31,14 @@ def build_dataset(df):
         m = d.groupby("day")["volume"].transform(lambda s: s.rolling(12).mean())
         d["rel_vol"] = d["volume"] / m.replace(0, np.nan)
 
-    # Target: signal at close of bar t -> enter open of t+1 -> exit close of t+1
-    d["fwd_ret"] = g["close"].shift(-1) / g["open"].shift(-1) - 1
+    # Target: signal at close of bar t -> enter at open of t+1 -> exit at close of t+horizon
+    d["fwd_ret"] = g["close"].shift(-horizon) / g["open"].shift(-1) - 1
     d["y"] = (d["fwd_ret"] > 0).astype(int)
 
-    # Gap safety
+    # Gap safety: the exit bar must be exactly `horizon` steps after the signal bar
     ts = d.index.to_series()
-    next_ts = ts.groupby(d["day"]).shift(-1)
-    next_ok = (next_ts - ts) == STEP
+    exit_ts = ts.groupby(d["day"]).shift(-horizon)
+    next_ok = (exit_ts - ts) == horizon * STEP
     gap = (ts.groupby(d["day"]).diff() > STEP).astype(int)
     recent_gap = gap.groupby(d["day"]).transform(lambda s: s.rolling(12, min_periods=1).max())
 
