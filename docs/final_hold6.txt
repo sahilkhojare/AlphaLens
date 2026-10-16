@@ -1,0 +1,41 @@
+
+=== Data report: RELIANCE.NS_5m ===
+raw_rows                 4392
+duplicate_timestamps     0
+nan_rows                 0
+bad_ohlc_rows            0
+outside_session_rows     0
+gaps_inside_days         6
+clean_rows               4392
+sessions                 60
+date_range               2026-07-23 09:15:00+05:30 -> 2026-10-16 15:25:00+05:30
+has_volume               True
+
+=== Data report: TCS.NS_5m ===
+raw_rows                 4382
+duplicate_timestamps     0
+nan_rows                 0
+bad_ohlc_rows            0
+outside_session_rows     0
+gaps_inside_days         6
+clean_rows               4382
+sessions                 60
+date_range               2026-07-23 09:15:00+05:30 -> 2026-10-16 15:25:00+05:30
+has_volume               True
+
+Evaluating on: TEST (final)
+Hold: 6 bar(s) = 30 minutes
+Costs: 10.0 bps per trade (fees 6.0 round trip + slippage 2.0 per side)
+LogReg: margin chosen on validation = 0.04 (91 trades)
+RandomForest: margin chosen on validation = 0.1 (37 trades)
+
+                                      total_return_pct  max_drawdown_pct  sharpe  trades  hit_rate_pct  avg_net_bps_per_trade  gross_hit_rate_pct  avg_gross_bps_per_trade
+symbol         strategy                                                                                                                                                   
+RELIANCE.NS_5m Buy & hold (no costs)              1.36             -5.50    1.22       1           NaN                    NaN                 NaN                      NaN
+               EMA rule                         -10.09            -10.09  -15.88     105         34.29                 -10.09               48.57                    -0.09
+               LogReg                            -2.46             -3.53   -6.85      53         39.62                  -4.66               52.83                     5.34
+               RandomForest                      -0.04             -0.59   -0.24      19         52.63                  -0.21               73.68                     9.79
+TCS.NS_5m      Buy & hold (no costs)             17.35             -3.25    8.56       1           NaN                    NaN                 NaN                      NaN
+               EMA rule                         -11.02            -11.59  -10.29     105         31.43                 -11.03               51.43                    -1.03
+               LogReg                           -10.17            -10.17  -17.56      58         32.76                 -18.41               43.10                    -8.41
+               RandomForest                      -0.91             -1.43   -4.46      15         33.33                  -6.08               33.33                     3.92
