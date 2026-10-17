@@ -127,6 +127,13 @@ python -m pytest -q
 
 On Windows PowerShell, activate the environment with `.\.venv\Scripts\Activate.ps1`.
 
+   ## Dashboard
+
+   Run it with `streamlit run app.py`. The sidebar sets the datasets, holding period, model and cost assumptions. Tabs show data checks, model metrics, equity curves with benchmarks, a trades table with CSV download, and the limitations.
+
+   ![Dashboard](assets/dashboard.png)
+   ![Equity curve](assets/equity_curve.png)
+   ![Model comparison](assets/model_comparison.png)
 
 ## Disclaimer
 
